@@ -3,14 +3,23 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/q7u0k4q6
+      - echo Logging in to ECR..
+      - aws --version
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - REPOSITORY_URI= public.ecr.aws/q7u0k4q6/nj-nginx
   build:
     commands:
+      - echo Build started as on `date`
+      - echo Building the docker image..
       - docker build -t nj-nginx:latest .
       - docker tag nj-nginx:latest public.ecr.aws/q7u0k4q6/nj-nginx:latest
   post_build:
     commands:
+      - echo Build completed as on `date`
+      - echo Pushing the docker image..
       - docker push public.ecr.aws/q7u0k4q6/nj-nginx:latest
       - printf '[{"name":nj-nginx-task,"imageUri":"%s"}]' public.ecr.aws/q7u0k4q6/nj-nginx:latest > imagedefinitions.json
+      - cat imagedefinitions.json
+      - echo done!
 artifacts:
   files: imagedefinitions.json
